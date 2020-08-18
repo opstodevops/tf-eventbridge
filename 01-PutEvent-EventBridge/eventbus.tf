@@ -3,7 +3,7 @@
 ##################################################################################
 
 resource "aws_cloudformation_stack" "eventbridge_bus" {
-  name = "eventbridge-bus"
+  name = "orders"
 
   template_body = <<EOF
 Resources:
@@ -21,8 +21,53 @@ resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
   event_pattern = <<EOF
 {
   "account": [
-    "$(data.aws_caller_identity.current.account_id)"
+    "${data.aws_caller_identity.current.account_id}"
   ]
 }
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "eventbridge_loggroup" {
+  name = "/aws/events/order-catchall"
+
+  tags = {
+    Environment = "dev"
+    Application = "invoice"
+  }
+}
+
+resource "aws_cloudformation_stack" "eventbridge_rule" {
+  name = "eventbridge-rule"
+
+  template_body = <<EOF
+Resources:
+  EventRule: 
+  Type: AWS::Events::Rule
+  Properties:
+    EventBusName: "${aws_cloudformation_stack.eventbridge_bus.name}"
+    Description: "EventRule"
+    EventPattern: 
+      detail-type:
+        - "TBD"
+      detail: 
+        userIdentity:
+          type:
+            - !Ref AWS::AccountId
+    State: "ENABLED"
+    Targets: 
+      - Arn: !GetAtt
+          - "${aws_cloudwatch_log_group.eventbridge_loggroup.id}"
+        Id: "TargetCWLogGroupV1"
+#   PermissionForEventsToInvokeLambda: 
+#     Type: AWS::Lambda::Permission
+#     Properties: 
+#       FunctionName: 
+#         Ref: "LambdaFunction"
+#       Action: "lambda:InvokeFunction"
+#       Principal: "events.amazonaws.com"
+#       SourceArn: 
+#         Fn::GetAtt: 
+#           - "EventRule"
+#           - "Arn"
 EOF
 }
