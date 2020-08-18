@@ -14,10 +14,6 @@ Resources:
 EOF
 }
 
-data "aws_cloudformation_stack" "eventbridge_bus_name" {
-    name = aws_cloudformation_stack.eventbridge_bus.name
-}
-
 # resource "aws_cloudwatch_event_rule" "eventbridge_rule" {
 #   name        = "catchall-invoice"
 #   description = "Catch all events for invoice"
@@ -40,9 +36,6 @@ resource "aws_cloudwatch_log_group" "eventbridge_loggroup" {
   }
 }
 
-data "aws_cloudformation_stack" "eventbridge_loggroup_name" {
-    name = aws_cloudwatch_log_group.eventbridge_loggroup.id
-}
 
 resource "aws_cloudformation_stack" "eventbridge_rule" {
   name = "eventbridge-rule"
@@ -52,7 +45,7 @@ Resources:
   EventRule: 
   Type: AWS::Events::Rule
   Properties:
-    EventBusName: "${data.aws_cloudformation_stack.eventbridge_bus_name.name}"
+    EventBusName: "${aws_cloudformation_stack.eventbridge_bus.name}"
     Description: "EventRule"
     EventPattern: 
       detail-type:
@@ -63,7 +56,7 @@ Resources:
             - "${data.aws_caller_identity.current.account_id}"
     State: "ENABLED"
     Targets: 
-      - Arn: "${data.aws_cloudformation_stack.eventbridge_loggroup_name.id}"
+      - Arn: "${aws_cloudwatch_log_group.eventbridge_loggroup.id}"
         Id: "01-TargetCWLogGroup"
 #   PermissionForEventsToInvokeLambda: 
 #     Type: AWS::Lambda::Permission
