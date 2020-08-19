@@ -28,7 +28,7 @@ EOF
 # }
 
 resource "aws_cloudwatch_log_group" "eventbridge_loggroup" {
-  name = "order-catchall"
+  name = "/aws/events/order-catchall"
 
   tags = {
     Environment = "dev"
