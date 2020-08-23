@@ -21,14 +21,14 @@ resource "aws_iam_role" "lambdarole" {
     ]
 }
 EOF
-tags = {
-      Environment = "dev"
+  tags = {
+    Environment = "dev"
   }
 }
 
-resource "aws_iam_role_policy" "lambdarole_policy" {
-  name = "lambdarole-eventbridge-policy"
-  role = aws_iam_role.lambdarole.id
+resource "aws_iam_policy" "lambdarole_policy" {
+  name = "lambdabasicexecution-eventbridge-policy"
+  // role = aws_iam_role.lambdarole.id
 
   policy = <<-EOF
   {
@@ -52,7 +52,14 @@ data "aws_iam_policy" "eventbridgefullaccess" {
   arn = "arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "lambdarole-eventbridgefullaccess" {
-  role       = aws_iam_role.lambdarole.name
+resource "aws_iam_policy_attachment" "lambdarole-eventbridgefullaccess" {
+  name       = "lambdarole-eventbridge-policy-attach"
+  roles      = [aws_iam_role.lambdarole.name]
   policy_arn = data.aws_iam_policy.eventbridgefullaccess.arn
+}
+
+resource "aws_iam_policy_attachment" "lambdarole-policy" {
+  name       = "lambdarolepolicy-attach"
+  roles      = [aws_iam_role.lambdarole.name]
+  policy_arn = aws_iam_policy.lambdarole_policy.arn
 }
