@@ -14,5 +14,5 @@ resource "aws_default_vpc" "default" {
 }
 
 data "aws_caller_identity" "current" {
-    
+
 }
